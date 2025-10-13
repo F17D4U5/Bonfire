@@ -91,7 +91,7 @@ let gameState = {
     buildings: { hunterHut: { count: 0, workers: 0, cost: { wood: 20 }, maxWorkers: 1, }, },
     defense: { raidStrength: 0, },
     events: { isWandererPresent: false, wandererFoodCost: 3, wandererArrivalHour: 0, },
-    bonfire: { woodCostPerCycle: 3, isBurning: true, },
+    bonfire: { woodCostPerCycle: 1, isBurning: true, },
 };
 
 // --- DOM & CANVAS ELEMENTS ---
@@ -588,3 +588,4 @@ document.addEventListener('DOMContentLoaded', init);
     </body>
 
 </html>
+
