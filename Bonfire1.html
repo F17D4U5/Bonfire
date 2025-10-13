@@ -178,8 +178,8 @@ function updateTime() {
         }
     }
 
-    // Cek Waktu Habis Pengembara (Jam 15:00)
-    if (gameState.events.isWandererPresent && gameState.time.hour === 15) {
+    // Cek Waktu Habis Pengembara (Jam 17:00)
+    if (gameState.events.isWandererPresent && gameState.time.hour === 17) {
         gameLog(`Pengembara itu pergi karena Anda tidak menawarkan makanan.`, true);
         gameState.events.isWandererPresent = false;
     }
@@ -239,7 +239,7 @@ function updateCity() {
     gameState.resources.food -= gameState.population * 1; 
 
     // 3. LOGIKA BONFIRE: Konsumsi Kayu
-    // Bonfire butuh kayu setiap cycle, terutama di malam hari (kita buat lebih mahal)
+    // Bonfire butuh kayu setiap cycle, terutama di malam hari
     const cost = gameState.bonfire.woodCostPerCycle; 
     
     if (gameState.resources.wood >= cost) {
@@ -279,7 +279,7 @@ function handleNightRaid() {
     // Debuff: Jika api padam, kurangi setengah kekuatan penjaga
     let defensePower = gameState.workers.guard * 5; 
     if (!gameState.bonfire.isBurning) {
-        defensePower = Math.floor(defensePower / 2); 
+        defensePower = Math.floor(defensePower / 3); 
         gameLog(`Api padam! Pertahanan melemah menjadi ${defensePower}.`, true);
     }
     
@@ -588,4 +588,5 @@ document.addEventListener('DOMContentLoaded', init);
     </body>
 
 </html>
+
 
