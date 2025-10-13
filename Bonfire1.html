@@ -91,7 +91,7 @@ let gameState = {
     buildings: { hunterHut: { count: 0, workers: 0, cost: { wood: 20 }, maxWorkers: 1, }, },
     defense: { raidStrength: 0, },
     events: { isWandererPresent: false, wandererFoodCost: 3, wandererArrivalHour: 0, },
-    bonfire: { woodCostPerCycle: 10, isBurning: true, },
+    bonfire: { woodCostPerCycle: 3, isBurning: true, },
 };
 
 // --- DOM & CANVAS ELEMENTS ---
@@ -169,7 +169,7 @@ function updateTime() {
     
     // LOGIKA EVENT PENGEMBARA
     if (!gameState.time.isNight && !gameState.events.isWandererPresent && gameState.time.dayCount > 1) {
-        if (gameState.time.hour >= 9 && gameState.time.hour <= 12) {
+        if (gameState.time.hour >= 7 && gameState.time.hour <= 12) {
             if (Math.random() < 0.10) { 
                 gameState.events.isWandererPresent = true;
                 gameState.events.wandererArrivalHour = gameState.time.hour;
@@ -586,4 +586,5 @@ function init() {
 document.addEventListener('DOMContentLoaded', init);
     </script>
     </body>
+
 </html>
