@@ -122,7 +122,7 @@ const initialGameState = {
     workers: { gatherer: 0, guard: 0, hunter: 0, },
     buildings: { 
         hunterHut: { count: 0, workers: 0, cost: { wood: 20 }, maxWorkers: 1, }, 
-        storageHut: { count: 0, workers: 0, cost: { wood: 30 }, maxWorkers: 0, }, 
+        storageHut: { count: 0, workers: 0, cost: { wood: 25 }, maxWorkers: 0, }, 
     },
     defense: { raidStrength: 0, },
     events: { isWandererPresent: false, wandererFoodCost: 3, wandererArrivalHour: 0, },
@@ -156,8 +156,8 @@ const WORKER_COLORS = {
 
 // --- VARIABEL BARU UNTUK GERAK ACAK PEKERJA ---
 let visualWorkers = [];
-const REST_RADIUS = 70; // Jarak maksimal dari pusat istirahat
-const MIN_DISTANCE_FROM_BONFIRE = 15; // Jarak minimal dari api unggun (pusat BONFIRE_POS)
+const REST_RADIUS = 50; // Jarak maksimal dari pusat istirahat
+const MIN_DISTANCE_FROM_BONFIRE = 10; // Jarak minimal dari api unggun (pusat BONFIRE_POS)
 const TRANSITION_SPEED = 6.0; // Kecepatan lari pekerja saat transisi
 
 /* -------------- HELPER & GAME OVER -------------- */
@@ -248,7 +248,7 @@ function updateTime() {
     const wasAttackPhase = gameState.time.isAttackPhase;
     
     if (!gameState.time.isNight && !gameState.events.isWandererPresent && gameState.time.dayCount > 1) {
-        if (gameState.time.hour >= 9 && gameState.time.hour <= 12) {
+        if (gameState.time.hour >= 7 && gameState.time.hour <= 12) {
             if (Math.random() < 0.10) { 
                 gameState.events.isWandererPresent = true;
                 gameState.events.wandererArrivalHour = gameState.time.hour;
@@ -257,7 +257,7 @@ function updateTime() {
         }
     }
 
-    if (gameState.events.isWandererPresent && gameState.time.hour === 15) {
+    if (gameState.events.isWandererPresent && gameState.time.hour === 17) {
         gameLog(`Pengembara itu pergi karena Anda tidak menawarkan makanan.`, true);
         gameState.events.isWandererPresent = false;
     }
@@ -840,8 +840,8 @@ function init() {
     }
     
     if (!gameState.isGameOver) {
-        timeIntervalId = setInterval(updateTime, 1000); 
-        cityIntervalId = setInterval(updateCity, 1000); 
+        timeIntervalId = setInterval(updateTime, 5000); 
+        cityIntervalId = setInterval(updateCity, 5000); 
     }
     
     updateUI(); 
@@ -852,4 +852,5 @@ document.addEventListener('DOMContentLoaded', init);
 
     </script>
 </body>
+
 </html>
