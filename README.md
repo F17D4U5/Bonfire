@@ -840,8 +840,8 @@ function init() {
     }
     
     if (!gameState.isGameOver) {
-        timeIntervalId = setInterval(updateTime, 1000); 
-        cityIntervalId = setInterval(updateCity, 1000); 
+        timeIntervalId = setInterval(updateTime, 5000); 
+        cityIntervalId = setInterval(updateCity, 5000); 
     }
     
     updateUI(); 
