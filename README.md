@@ -32,14 +32,25 @@
             text-shadow: 0 0 2px #000;
         }
         
-        /* --- PENYESUAIAN POSISI PANEL PEKERJA (Jarak 11px = 50px) --- */
-        #action-panel-container {
+        /* ----------------------------------------------------- */
+        /* --- KELOMPOK UI KIRI (PEKERJA & BANGUNAN) --- */
+        /* ----------------------------------------------------- */
+        /* Kontainer untuk menampung kedua panel agar sejajar di kiri */
+        #left-ui-container {
             position: absolute;
             top: 50px; 
             left: 4px;
             z-index: 10;
+        }
+
+        /* ----------------------------------------------------- */
+        /* --- PANEL PEKERJA (Paling Atas) --- */
+        /* ----------------------------------------------------- */
+        #action-panel-container {
+            /* Dikelola oleh #left-ui-container. Dibuat flex untuk menampung tombol dan konten. */
             display: flex;
             align-items: flex-start;
+            margin-bottom: 5px; /* Memberi jarak ke tombol bangunan */
         }
 
         #worker-controls-content {
@@ -57,8 +68,34 @@
             transform: translateX(0); 
         }
         
-        /* UKURAN TOMBOL TOGGLE */
-        #toggle-button {
+        /* ------------------------------------------------------------------- */
+        /* --- PANEL BANGUNAN (Di Bawah Pekerja) ---*/
+        /* ------------------------------------------------------------------- */
+        #build-panel-container {
+             display: flex; /* Memastikan tombol palu dan konten panel sejajar */
+             align-items: flex-start;
+             position: relative;
+        }
+
+        #build-controls-content {
+            transform: translateX(-100%); /* Sembunyikan ke kiri */
+            transition: transform 0.3s ease-in-out;
+            margin-left: -4px; 
+            padding: 8px; 
+            background-color: rgba(45, 62, 80, 0.9); 
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            box-shadow: 4px 0 6px rgba(0, 0, 0, 0.2);
+            width: 200px; /* Lebar agar tombol pembangunan muat */
+        }
+        
+        /* Geser panel ke kanan saat terbuka */
+        #build-panel-container.open #build-controls-content {
+            transform: translateX(0);
+        }
+
+        /* UKURAN TOMBOL TOGGLE (Pekerja & Bangunan) */
+        .toggle-button {
             padding: 3px 6px; 
             background-color: #3b82f6;
             color: white;
@@ -69,15 +106,23 @@
             cursor: pointer;
             z-index: 11; 
             transition: background-color 0.2s;
+            line-height: 1.25;
         }
-        
-        #action-panel-container.open #toggle-button {
+
+        /* Kustomisasi Tombol Toggle Pekerja */
+        #action-panel-container.open #toggle-worker-button {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
         }
         
+        /* Kustomisasi Tombol Toggle Pembangunan (Palau) */
+        #build-panel-container.open #toggle-build-button {
+             border-top-left-radius: 0;
+             border-bottom-left-radius: 0;
+        }
+
         /* UKURAN FONT DI DALAM PANEL KONTROL */
-        #worker-controls-content .text-sm {
+        #worker-controls-content .text-sm, #build-controls-content .text-sm {
             font-size: 0.8rem; 
         }
         
@@ -113,45 +158,71 @@
                     <div class="stat-box-compact">👨‍👩‍👧 Penduduk: <span id="population-stat">1</span></div>
                 </div>
             </div>
-            <div id="action-panel-container" class="absolute top-50 left-4">
-                
-                <button id="toggle-button" onclick="toggleWorkerPanel()">
-                    >>
-                </button>
-                
-                <div id="worker-controls-content" class="bg-slate-700/80 backdrop-blur-sm z-10 shadow-lg hidden">
-                    <h2 class="text-base font-semibold mb-2 text-white border-b border-slate-500 pb-1">Alokasi Pekerja</h2>
+            
+            <div id="left-ui-container">
+            
+                <div id="action-panel-container">
                     
-                    <div class="flex flex-col gap-2">
+                    <button id="toggle-worker-button" class="toggle-button" onclick="toggleWorkerPanel()">
+                        >>
+                    </button>
+                    
+                    <div id="worker-controls-content" class="bg-slate-700/80 backdrop-blur-sm z-10 shadow-lg hidden">
+                        <h2 class="text-base font-semibold mb-2 text-white border-b border-slate-500 pb-1">Alokasi Pekerja</h2>
                         
-                        <div class="flex justify-between items-center w-48">
-                            <span class="text-sm">🪵 Kayu: <span id="gatherer-stat-short">0</span></span>
-                            <div>
-                                <button onclick="modifyWorker('gatherer', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
-                                <button onclick="modifyWorker('gatherer', 1)" class="bg-green-600 hover:bg-green-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                        <div class="flex flex-col gap-2">
+                            
+                            <div class="flex justify-between items-center w-48">
+                                <span class="text-sm">🪵 Kayu: <span id="gatherer-stat-short">0</span></span>
+                                <div>
+                                    <button onclick="modifyWorker('gatherer', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
+                                    <button onclick="modifyWorker('gatherer', 1)" class="bg-green-600 hover:bg-green-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">🥩 Hunter: <span id="hunter-stat-short">0</span> / <span id="max-hunter-stat-short">0</span></span>
+                                <div>
+                                    <button onclick="modifyWorker('hunter', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
+                                    <button onclick="modifyWorker('hunter', 1)" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">🛡️ Penjaga: <span id="guard-stat-short">0</span></span>
+                                <div>
+                                    <button onclick="modifyWorker('guard', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
+                                    <button onclick="modifyWorker('guard', 1)" class="bg-red-600 hover:bg-red-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm">🥩 Hunter: <span id="hunter-stat-short">0</span> / <span id="max-hunter-stat-short">0</span></span>
-                            <div>
-                                <button onclick="modifyWorker('hunter', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
-                                <button onclick="modifyWorker('hunter', 1)" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm">🛡️ Penjaga: <span id="guard-stat-short">0</span></span>
-                            <div>
-                                <button onclick="modifyWorker('guard', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
-                                <button onclick="modifyWorker('guard', 1)" class="bg-red-600 hover:bg-red-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
-                            </div>
+                        <p class="mt-3 text-xs text-white/80 border-t border-slate-500 pt-2">Pekerja Bebas: <span id="free-workers-stat-short">1</span></p>
+                    </div>
+                </div>
+            
+                <div id="build-panel-container">
+                    
+                    <button id="toggle-build-button" class="toggle-button" onclick="toggleBuildPanel()">
+                        🔨
+                    </button>
+
+                    <div id="build-controls-content" class="bg-slate-700/80 backdrop-blur-sm z-10 shadow-lg hidden">
+                        <h2 class="text-base font-semibold mb-2 text-white border-b border-slate-500 pb-1">Pembangunan</h2>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="buildBuilding('hunterHut')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded disabled:opacity-50 text-sm" id="build-hunterhut-btn">
+                                Hunter Hut (20 🪵) (<span id="hunterhut-count">0</span>)
+                            </button>
+                            
+                            <button onclick="buildBuilding('storageHut')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded disabled:opacity-50 text-sm" id="build-storagehut-btn">
+                                Storage Hut (30 🪵) (<span id="storagehut-count">0</span>)
+                            </button>
                         </div>
                     </div>
-                    
-                    <p class="mt-3 text-xs text-white/80 border-t border-slate-500 pt-2">Pekerja Bebas: <span id="free-workers-stat-short">1</span></p>
                 </div>
+                
             </div>
+            
             <div class="bg-yellow-800 p-3 rounded-lg absolute top-4 right-4 z-10 shadow-lg" id="wanderer-panel" style="display: none;">
                 <h3 class="text-lg font-semibold mb-2">Seorang Pengembara Tiba!</h3>
                 <p class="text-sm mb-3">Orang ini kelaparan dan meminta <span id="wanderer-cost">3</span>🥩 Makanan untuk menetap.</p>
@@ -165,18 +236,6 @@
                 </div>
             </div>
 
-        </div>
-        
-        <div class="bg-slate-700 p-4 rounded-lg">
-            <h2 class="text-xl font-semibold mb-3">Pembangunan</h2>
-            <button onclick="buildBuilding('hunterHut')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50" id="build-hunterhut-btn">
-                Hunter Hut (20 🪵) (<span id="hunterhut-count">0</span>)
-            </button>
-            
-            <button onclick="buildBuilding('storageHut')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 ml-4" id="build-storagehut-btn">
-                Storage Hut (30 🪵) (<span id="storagehut-count">0</span>)
-            </button>
-            
         </div>
         
     </div>
@@ -213,9 +272,17 @@ let gameState = JSON.parse(JSON.stringify(initialGameState));
 const timeDisplay = document.getElementById('time-display');
 const logDisplay = document.getElementById('log-display');
 const container = document.querySelector('.container');
+
+// Panel Pekerja
 const actionPanelContainer = document.getElementById('action-panel-container');
 const workerControlsContent = document.getElementById('worker-controls-content');
-const toggleButton = document.getElementById('toggle-button');
+const toggleWorkerButton = document.getElementById('toggle-worker-button');
+
+// Panel Pembangunan BARU
+const buildPanelContainer = document.getElementById('build-panel-container');
+const buildControlsContent = document.getElementById('build-controls-content');
+const toggleBuildButton = document.getElementById('toggle-build-button');
+
 
 let canvas;
 let ctx;
@@ -246,22 +313,43 @@ const TRANSITION_SPEED = 6.0;
 function toggleWorkerPanel() {
     const isOpen = actionPanelContainer.classList.toggle('open');
     workerControlsContent.classList.toggle('hidden', !isOpen);
-    toggleButton.textContent = isOpen ? '<<' : '>>';
+    toggleWorkerButton.textContent = isOpen ? '<<' : '>>';
     
+    // Logika pembulatan tombol toggle pekerja
     if (isOpen) {
-        toggleButton.classList.remove('rounded-full');
-        toggleButton.classList.remove('rounded-tr-none', 'rounded-br-none');
-        toggleButton.classList.add('rounded-tr-none', 'rounded-br-none');
+        toggleWorkerButton.classList.remove('rounded-full');
+        toggleWorkerButton.classList.add('rounded-tr-none', 'rounded-br-none');
     } else {
-        toggleButton.classList.remove('rounded-tr-none', 'rounded-br-none');
-        toggleButton.classList.add('rounded-full'); 
+        toggleWorkerButton.classList.remove('rounded-tr-none', 'rounded-br-none');
+        toggleWorkerButton.classList.add('rounded-full'); 
+    }
+}
+
+function toggleBuildPanel() {
+    const isOpen = buildPanelContainer.classList.toggle('open');
+    buildControlsContent.classList.toggle('hidden', !isOpen);
+    toggleBuildButton.textContent = isOpen ? 'X' : '🔨'; // Ubah ikon saat terbuka
+
+    // Logika pembulatan tombol toggle bangunan
+    if (isOpen) {
+        toggleBuildButton.classList.remove('rounded-full');
+        toggleBuildButton.classList.add('rounded-tr-none', 'rounded-br-none');
+    } else {
+        toggleBuildButton.classList.remove('rounded-tr-none', 'rounded-br-none');
+        toggleBuildButton.classList.add('rounded-full');
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi awal panel Pekerja
     if (!actionPanelContainer.classList.contains('open')) {
-        toggleButton.classList.add('rounded-full');
+        toggleWorkerButton.classList.add('rounded-full');
         workerControlsContent.classList.add('hidden'); 
+    }
+    // Inisialisasi awal panel Bangunan
+    if (!buildPanelContainer.classList.contains('open')) {
+        toggleBuildButton.classList.add('rounded-full');
+        buildControlsContent.classList.add('hidden'); 
     }
 });
 
@@ -328,8 +416,13 @@ function restartGame() {
     
     actionPanelContainer.classList.remove('open');
     workerControlsContent.classList.add('hidden');
-    toggleButton.textContent = '>>';
-    toggleButton.classList.add('rounded-full');
+    toggleWorkerButton.textContent = '>>';
+    toggleWorkerButton.classList.add('rounded-full');
+    
+    buildPanelContainer.classList.remove('open');
+    buildControlsContent.classList.add('hidden');
+    toggleBuildButton.textContent = '🔨';
+    toggleBuildButton.classList.add('rounded-full');
     
     init(); 
     gameLog("Game diulang! Selamat datang kembali, Survivor.");
