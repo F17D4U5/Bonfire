@@ -9,18 +9,87 @@
         body { font-family: sans-serif; background-color: #1e293b; color: #f8fafc; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
         .night-mode { background-color: #1a202c !important; color: #a5b4fc !important; }
-        #action-panel { transition: background-color 2s ease-in-out; }
-        .night-mode #action-panel { background-color: #0f172a / 80; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-box { 
-            background-color: #334155; 
-            padding: 10px; 
-            border-radius: 6px; 
-            transition: background-color 0.5s ease;
+        
+        /* --- UKURAN PANEL STATS OVERLAY --- */
+        .stats-grid-compact { 
+            display: flex; 
+            gap: 12px; 
+            padding: 3px 8px; 
+            background-color: rgba(15, 23, 42, 0.85); 
+            border-bottom-left-radius: 6px; 
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
+        .stat-box-compact { 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            color: #f8fafc; 
+            padding: 3px 0; 
+            text-shadow: 0 0 2px #000;
+        }
+        
+        /* --- PENYESUAIAN POSISI PANEL PEKERJA (Jarak 11px = 50px) --- */
+        #action-panel-container {
+            position: absolute;
+            top: 50px; 
+            left: 4px;
+            z-index: 10;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        #worker-controls-content {
+            transform: translateX(-100%); 
+            transition: transform 0.3s ease-in-out;
+            margin-left: -4px; 
+            padding: 8px; 
+            background-color: rgba(45, 62, 80, 0.9); 
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            box-shadow: 4px 0 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #action-panel-container.open #worker-controls-content {
+            transform: translateX(0); 
+        }
+        
+        /* UKURAN TOMBOL TOGGLE */
+        #toggle-button {
+            padding: 3px 6px; 
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            font-size: 0.8rem; 
+            cursor: pointer;
+            z-index: 11; 
+            transition: background-color 0.2s;
+        }
+        
+        #action-panel-container.open #toggle-button {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        
+        /* UKURAN FONT DI DALAM PANEL KONTROL */
+        #worker-controls-content .text-sm {
+            font-size: 0.8rem; 
+        }
+        
+        /* UKURAN TOMBOL +/- */
+        #worker-controls-content button {
+            width: 1.25rem; 
+            height: 1.25rem; 
+            font-size: 0.75rem; 
+        }
+        
         .time-status { font-weight: bold; font-size: 1.25rem; }
         .night-mode { background-color: #1a202c; color: #a5b4fc; }
-        .night-mode .stat-box { background-color: #1e293b; } /* Efek malam pada stat box */
         .log-error { color: #f87171; font-weight: bold; }
     </style>
 </head>
@@ -33,47 +102,55 @@
             <span id="log-display" class="text-sm italic">Selamat datang di pantai tak dikenal.</span>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-box">🪵 Kayu: <span id="wood-stat">0</span></div>
-            <div class="stat-box">🥩 Makanan: <span id="food-stat">0</span></div>
-            <div class="stat-box">👨‍👩‍👧 Penduduk: <span id="population-stat">1</span></div>
-        </div>
-
         <div id="canvas-wrapper" class="relative bg-slate-800 p-0 rounded-lg mb-4 flex justify-center">
             
             <canvas id="gameCanvas" width="700" height="300" class="bg-gray-900 border border-gray-600 rounded-md"></canvas>
 
-            <div id="action-panel" class="absolute top-4 left-4 p-3 bg-slate-700/80 rounded-lg backdrop-blur-sm z-10 shadow-lg">
-                <h2 class="text-lg font-semibold mb-2 text-white border-b border-slate-500 pb-1">Alokasi Pekerja</h2>
-                
-                <div class="flex flex-col gap-3">
-                    
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm">🪵 Pengumpul Kayu: <span id="gatherer-stat-short">0</span></span>
-                        <div>
-                            <button onclick="modifyWorker('gatherer', -1)" class="bg-gray-500 hover:bg-gray-600 text-white w-6 h-6 rounded-l disabled:opacity-50 text-sm font-bold">-</button>
-                            <button onclick="modifyWorker('gatherer', 1)" class="bg-green-600 hover:bg-green-700 text-white w-6 h-6 rounded-r disabled:opacity-50 text-sm font-bold">+</button>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm">🥩 Hunter: <span id="hunter-stat-short">0</span> / <span id="max-hunter-stat-short">0</span></span>
-                        <div>
-                            <button onclick="modifyWorker('hunter', -1)" class="bg-gray-500 hover:bg-gray-600 text-white w-6 h-6 rounded-l disabled:opacity-50 text-sm font-bold">-</button>
-                            <button onclick="modifyWorker('hunter', 1)" class="bg-yellow-600 hover:bg-yellow-700 text-white w-6 h-6 rounded-r disabled:opacity-50 text-sm font-bold">+</button>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm">🛡️ Penjaga: <span id="guard-stat-short">0</span></span>
-                        <div>
-                            <button onclick="modifyWorker('guard', -1)" class="bg-gray-500 hover:bg-gray-600 text-white w-6 h-6 rounded-l disabled:opacity-50 text-sm font-bold">-</button>
-                            <button onclick="modifyWorker('guard', 1)" class="bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-r disabled:opacity-50 text-sm font-bold">+</button>
-                        </div>
-                    </div>
+            <div id="stats-overlay" class="absolute top-0 left-1/2 transform -translate-x-1/2 z-20">
+                <div class="stats-grid-compact">
+                    <div class="stat-box-compact">🪵 Kayu: <span id="wood-stat">0</span></div>
+                    <div class="stat-box-compact">🥩 Makanan: <span id="food-stat">0</span></div>
+                    <div class="stat-box-compact">👨‍👩‍👧 Penduduk: <span id="population-stat">1</span></div>
                 </div>
+            </div>
+            <div id="action-panel-container" class="absolute top-50 left-4">
                 
-                <p class="mt-4 text-xs text-white/80 border-t border-slate-500 pt-2">Pekerja Bebas: <span id="free-workers-stat-short">1</span></p>
+                <button id="toggle-button" onclick="toggleWorkerPanel()">
+                    >>
+                </button>
+                
+                <div id="worker-controls-content" class="bg-slate-700/80 backdrop-blur-sm z-10 shadow-lg hidden">
+                    <h2 class="text-base font-semibold mb-2 text-white border-b border-slate-500 pb-1">Alokasi Pekerja</h2>
+                    
+                    <div class="flex flex-col gap-2">
+                        
+                        <div class="flex justify-between items-center w-48">
+                            <span class="text-sm">🪵 Kayu: <span id="gatherer-stat-short">0</span></span>
+                            <div>
+                                <button onclick="modifyWorker('gatherer', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
+                                <button onclick="modifyWorker('gatherer', 1)" class="bg-green-600 hover:bg-green-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">🥩 Hunter: <span id="hunter-stat-short">0</span> / <span id="max-hunter-stat-short">0</span></span>
+                            <div>
+                                <button onclick="modifyWorker('hunter', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
+                                <button onclick="modifyWorker('hunter', 1)" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">🛡️ Penjaga: <span id="guard-stat-short">0</span></span>
+                            <div>
+                                <button onclick="modifyWorker('guard', -1)" class="bg-gray-500 hover:bg-gray-600 text-white rounded-l disabled:opacity-50 font-bold">-</button>
+                                <button onclick="modifyWorker('guard', 1)" class="bg-red-600 hover:bg-red-700 text-white rounded-r disabled:opacity-50 font-bold">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="mt-3 text-xs text-white/80 border-t border-slate-500 pt-2">Pekerja Bebas: <span id="free-workers-stat-short">1</span></p>
+                </div>
             </div>
             <div class="bg-yellow-800 p-3 rounded-lg absolute top-4 right-4 z-10 shadow-lg" id="wanderer-panel" style="display: none;">
                 <h3 class="text-lg font-semibold mb-2">Seorang Pengembara Tiba!</h3>
@@ -93,11 +170,11 @@
         <div class="bg-slate-700 p-4 rounded-lg">
             <h2 class="text-xl font-semibold mb-3">Pembangunan</h2>
             <button onclick="buildBuilding('hunterHut')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50" id="build-hunterhut-btn">
-                Bangun Hunter Hut (20 🪵) (<span id="hunterhut-count">0</span>)
+                Hunter Hut (20 🪵) (<span id="hunterhut-count">0</span>)
             </button>
             
             <button onclick="buildBuilding('storageHut')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 ml-4" id="build-storagehut-btn">
-                Bangun Storage Hut (30 🪵) (<span id="storagehut-count">0</span>)
+                Storage Hut (30 🪵) (<span id="storagehut-count">0</span>)
             </button>
             
         </div>
@@ -122,7 +199,7 @@ const initialGameState = {
     workers: { gatherer: 0, guard: 0, hunter: 0, },
     buildings: { 
         hunterHut: { count: 0, workers: 0, cost: { wood: 20 }, maxWorkers: 1, }, 
-        storageHut: { count: 0, workers: 0, cost: { wood: 25 }, maxWorkers: 0, }, 
+        storageHut: { count: 0, workers: 0, cost: { wood: 30 }, maxWorkers: 0, }, 
     },
     defense: { raidStrength: 0, },
     events: { isWandererPresent: false, wandererFoodCost: 3, wandererArrivalHour: 0, },
@@ -136,6 +213,10 @@ let gameState = JSON.parse(JSON.stringify(initialGameState));
 const timeDisplay = document.getElementById('time-display');
 const logDisplay = document.getElementById('log-display');
 const container = document.querySelector('.container');
+const actionPanelContainer = document.getElementById('action-panel-container');
+const workerControlsContent = document.getElementById('worker-controls-content');
+const toggleButton = document.getElementById('toggle-button');
+
 let canvas;
 let ctx;
 let animationFrameId; 
@@ -156,9 +237,33 @@ const WORKER_COLORS = {
 
 // --- VARIABEL BARU UNTUK GERAK ACAK PEKERJA ---
 let visualWorkers = [];
-const REST_RADIUS = 50; // Jarak maksimal dari pusat istirahat
-const MIN_DISTANCE_FROM_BONFIRE = 10; // Jarak minimal dari api unggun (pusat BONFIRE_POS)
-const TRANSITION_SPEED = 6.0; // Kecepatan lari pekerja saat transisi
+const REST_RADIUS = 30; 
+const MIN_DISTANCE_FROM_BONFIRE = 15; 
+const TRANSITION_SPEED = 6.0; 
+
+/* -------------- FUNGSI TOGGLE PANEL -------------- */
+
+function toggleWorkerPanel() {
+    const isOpen = actionPanelContainer.classList.toggle('open');
+    workerControlsContent.classList.toggle('hidden', !isOpen);
+    toggleButton.textContent = isOpen ? '<<' : '>>';
+    
+    if (isOpen) {
+        toggleButton.classList.remove('rounded-full');
+        toggleButton.classList.remove('rounded-tr-none', 'rounded-br-none');
+        toggleButton.classList.add('rounded-tr-none', 'rounded-br-none');
+    } else {
+        toggleButton.classList.remove('rounded-tr-none', 'rounded-br-none');
+        toggleButton.classList.add('rounded-full'); 
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!actionPanelContainer.classList.contains('open')) {
+        toggleButton.classList.add('rounded-full');
+        workerControlsContent.classList.add('hidden'); 
+    }
+});
 
 /* -------------- HELPER & GAME OVER -------------- */
 function gameLog(message, isError = false) {
@@ -215,17 +320,22 @@ function restartGame() {
     clearInterval(cityIntervalId);
     
     gameState = JSON.parse(JSON.stringify(initialGameState));
-    visualWorkers = []; // Reset visual workers
+    visualWorkers = []; 
     
     document.getElementById('game-over-overlay').style.display = 'none';
     
     container.classList.remove('night-mode');
     
+    actionPanelContainer.classList.remove('open');
+    workerControlsContent.classList.add('hidden');
+    toggleButton.textContent = '>>';
+    toggleButton.classList.add('rounded-full');
+    
     init(); 
     gameLog("Game diulang! Selamat datang kembali, Survivor.");
 }
 
-/* -------------- A. MEKANIK WAKTU & SIKLUS (PENAMBAHAN LOGIKA TRANSISI) -------------- */
+/* -------------- A. MEKANIK WAKTU & SIKLUS -------------- */
 function updateTime() {
     if (gameState.isGameOver) return; 
     
@@ -241,46 +351,50 @@ function updateTime() {
              gameState.freeWorkers++;
              gameState.maxWorkers++;
              gameLog(`Wanderer baru bergabung! Populasi: ${gameState.population}`);
+             syncVisualWorkers(); 
         }
     }
 
     const wasNight = gameState.time.isNight;
     const wasAttackPhase = gameState.time.isAttackPhase;
+    const currentHour = gameState.time.hour;
     
+    // Logika Pengembara (Jam 7 sampai jam 17)
     if (!gameState.time.isNight && !gameState.events.isWandererPresent && gameState.time.dayCount > 1) {
-        if (gameState.time.hour >= 7 && gameState.time.hour <= 12) {
+        if (currentHour >= 7 && currentHour <= 12) {
             if (Math.random() < 0.10) { 
                 gameState.events.isWandererPresent = true;
-                gameState.events.wandererArrivalHour = gameState.time.hour;
+                gameState.events.wandererArrivalHour = currentHour;
                 gameLog(`👋 Seorang Pengembara tiba! Klik tombol 'Terima Pengembara' di kanan atas.`);
             }
         }
     }
-
-    if (gameState.events.isWandererPresent && gameState.time.hour === 17) {
+    if (gameState.events.isWandererPresent && currentHour === 17) {
         gameLog(`Pengembara itu pergi karena Anda tidak menawarkan makanan.`, true);
         gameState.events.isWandererPresent = false;
     }
     
-    // 1. Fase Persiapan Malam (Jam 20:00)
-    if (gameState.time.hour === 20 && !wasNight) {
+    // --- LOGIKA UTAMA SIKLUS SIANG/MALAM ---
+
+    // Transisi ke Malam (Jam 18:00)
+    if (currentHour === 18 && !wasNight) {
         gameState.time.isNight = true; 
         gameLog("🔔 Matahari terbenam! Persiapkan penjaga Anda!");
         container.classList.add('night-mode');
         
-        // *TRANSISI VISUAL: LARI PULANG*
+        // Pergerakan pekerja ke area istirahat
         const REST_CENTER_Y = BONFIRE_POS.y + 40;
         visualWorkers.forEach(worker => {
             if (worker.type === 'gatherer' || worker.type === 'hunter') {
-                worker.targetX = BONFIRE_POS.x + (Math.random() * 20 - 10); // sedikit acak
+                worker.targetX = BONFIRE_POS.x + (Math.random() * 20 - 10); 
                 worker.targetY = REST_CENTER_Y + (Math.random() * 20 - 10);
                 worker.isTargetedMoving = true;
             }
         });
     }
 
-    // 2. Transisi ke FASE SERANGAN (Jam 22:00)
-    if (gameState.time.hour === 22 && !wasAttackPhase) {
+    // Transisi ke FASE SERANGAN (Jam 22:00) - Tetap
+    if (currentHour === 22 && !wasAttackPhase) {
         gameState.time.isAttackPhase = true;
         gameState.defense.raidStrength = gameState.time.dayCount * 2 + Math.floor(Math.random() * 5); 
         
@@ -288,8 +402,8 @@ function updateTime() {
         handleNightRaid();
     }
     
-    // 3. Transisi ke Siang (Jam 08:00)
-    if (gameState.time.hour === 8 && wasNight) {
+    // Transisi ke Siang (Jam 05:00)
+    if (currentHour === 5 && wasNight) {
         gameState.time.isNight = false;
         gameState.time.isAttackPhase = false; 
         
@@ -298,26 +412,29 @@ function updateTime() {
         gameLog("Selamat pagi! Saatnya bekerja kembali.");
         container.classList.remove('night-mode');
         
-        // *TRANSISI VISUAL: LARI KERJA*
+        // Pergerakan pekerja ke tempat kerja
         const WORK_SPOT_X = 50;
         const WORK_SPOT_Y = BONFIRE_POS.y;
         
-        let hunterIndex = 0;
-        let gathererIndex = 0;
-        
-        visualWorkers.forEach((worker, i) => {
-            if (worker.type === 'gatherer') {
-                const offset = 0; 
-                worker.targetX = WORK_SPOT_X + (Math.random() * 10 - 5);
-                worker.targetY = WORK_SPOT_Y + offset + (gathererIndex * 15) + (Math.random() * 10 - 5);
-                worker.isTargetedMoving = true;
-                gathererIndex++;
-            } else if (worker.type === 'hunter') {
-                 const offset = 30; 
-                worker.targetX = WORK_SPOT_X + (Math.random() * 10 - 5);
-                worker.targetY = WORK_SPOT_Y + offset + (hunterIndex * 15) + (Math.random() * 10 - 5);
-                worker.isTargetedMoving = true;
-                hunterIndex++;
+        // Hitung ulang posisi kerja untuk semua pekerja non-penjaga
+        const currentGatherers = visualWorkers.filter(w => w.type === 'gatherer');
+        const currentHunters = visualWorkers.filter(w => w.type === 'hunter');
+
+        visualWorkers.forEach((worker) => {
+            if (worker.type === 'gatherer' || worker.type === 'hunter') {
+                // HANYA pindahkan jika pekerja tidak dalam transisi (sudah di area istirahat)
+                // Ini juga mencakup pekerja yang di-set pada malam hari dan belum bergerak
+                if (!worker.isTargetedMoving) { 
+                    const isGatherer = worker.type === 'gatherer';
+                    const offset = isGatherer ? 0 : 30;
+                    
+                    // Dapatkan indeks pekerja di antara rekan sejenisnya
+                    const index = isGatherer ? currentGatherers.indexOf(worker) : currentHunters.indexOf(worker);
+                    
+                    worker.targetX = WORK_SPOT_X + (Math.random() * 10 - 5);
+                    worker.targetY = WORK_SPOT_Y + offset + (index * 15) + (Math.random() * 10 - 5);
+                    worker.isTargetedMoving = true;
+                }
             }
         });
     }
@@ -325,9 +442,8 @@ function updateTime() {
     updateUI();
 }
 
-/* -------------- B. MEKANIK UTAMA GAME (TIDAK ADA PERUBAHAN) -------------- */
+/* -------------- B. MEKANIK UTAMA GAME -------------- */
 function updateCity() {
-    // 1. LOGIKA BANGUNAN
     if (gameState.isGameOver) return;
     
     const storageHutCount = gameState.buildings.storageHut.count;
@@ -340,7 +456,6 @@ function updateCity() {
     let woodGained = 0;
     let foodProduced = 0;
     
-    // Pengumpul kayu dan Hunter HANYA BEKERJA saat TIDAK malam.
     if (!gameState.time.isNight) {
         woodGained = gameState.workers.gatherer * 3;
         foodProduced = gameState.workers.hunter * 5; 
@@ -391,7 +506,7 @@ function updateCity() {
     updateUI();
 }
 
-/* -------------- C. MEKANIK PERTAHANAN MALAM (TIDAK ADA PERUBAHAN) -------------- */
+/* -------------- C. MEKANIK PERTAHANAN MALAM -------------- */
 function handleNightRaid() {
     const attack = gameState.defense.raidStrength;
     
@@ -436,9 +551,11 @@ function handleNightRaid() {
     updateUI();
 }
 
-/* -------------- D. LOGIKA PEKERJA & BANGUNAN (TIDAK ADA PERUBAHAN) -------------- */
+/* -------------- D. LOGIKA PEKERJA & BANGUNAN -------------- */
 function modifyWorker(type, change) {
     if (gameState.isGameOver) return; 
+    
+    const WORKER_TYPE = type;
     
     if (change > 0) {
         if (gameState.freeWorkers <= 0) {
@@ -446,7 +563,7 @@ function modifyWorker(type, change) {
             return;
         }
 
-        if (type === 'hunter') {
+        if (WORKER_TYPE === 'hunter') {
             const maxHunters = gameState.buildings.hunterHut.count * gameState.buildings.hunterHut.maxWorkers;
             if (gameState.workers.hunter >= maxHunters) {
                 gameLog(`Anda perlu membangun Hunter's Hut (Pemburu) lagi! Kapasitas: ${maxHunters}.`, true);
@@ -454,20 +571,64 @@ function modifyWorker(type, change) {
             }
         }
         
-        gameState.workers[type]++;
+        // Transisi saat mengambil pekerjaan (Harus terjadi sebelum syncVisualWorkers)
+        const workerToTransition = visualWorkers.find(w => w.type === 'freeWorker');
+
+        if (workerToTransition) {
+             
+             // *** PERBAIKAN LOGIKA PEKERJA MALAM & PENJAGA ***
+             if (WORKER_TYPE === 'guard') {
+                 // Penjaga tidak perlu transisi ke target X/Y. Logika rotasi langsung mengambil alih.
+                 workerToTransition.isTargetedMoving = false; 
+                 workerToTransition.targetX = null;
+                 workerToTransition.targetY = null;
+
+             } else if (gameState.time.isNight) {
+                 // Pekerja Siang (Penebang/Pemburu) yang ditetapkan saat MALAM
+                 // Mereka tidak bergerak ke tempat kerja, tapi tetap di area istirahat.
+                 // Akan bergerak saat pagi tiba di updateTime.
+                 workerToTransition.isTargetedMoving = false; 
+                 workerToTransition.targetX = null;
+                 workerToTransition.targetY = null;
+                 gameLog(`Pekerja ditetapkan sebagai ${WORKER_TYPE}. Akan mulai bekerja saat fajar tiba.`);
+
+             } else {
+                 // Pekerja Siang (Penebang/Pemburu) yang ditetapkan saat SIANG
+                 workerToTransition.isTargetedMoving = true; 
+                 const WORK_SPOT_X = 50;
+                 const WORK_SPOT_Y = BONFIRE_POS.y;
+                 const isGatherer = WORKER_TYPE === 'gatherer';
+                 const offset = isGatherer ? 0 : 30;
+                 const indexBaru = gameState.workers[WORKER_TYPE]; 
+                 
+                 workerToTransition.targetX = WORK_SPOT_X + (Math.random() * 10 - 5);
+                 workerToTransition.targetY = WORK_SPOT_Y + offset + (indexBaru * 15) + (Math.random() * 10 - 5);
+             }
+        }
+        
+        gameState.workers[WORKER_TYPE]++;
         gameState.freeWorkers--;
     } 
     else if (change < 0) {
-        if (gameState.workers[type] <= 0) {
-            gameLog(`Tidak ada ${type} yang bisa dibebaskan.`);
+        if (gameState.workers[WORKER_TYPE] <= 0) {
+            gameLog(`Tidak ada ${WORKER_TYPE} yang bisa dibebaskan.`);
             return;
         }
 
-        gameState.workers[type]--;
+        gameState.workers[WORKER_TYPE]--;
         gameState.freeWorkers++;
+        
+        // Transisi saat dibebaskan menjadi freeWorker
+        const workerToTransition = visualWorkers.find(w => w.type === WORKER_TYPE);
+        if (workerToTransition) {
+            workerToTransition.isTargetedMoving = true;
+            // Arahkan ke area istirahat
+            const REST_CENTER_Y = BONFIRE_POS.y + 40;
+            workerToTransition.targetX = BONFIRE_POS.x + (Math.random() * 20 - 10); 
+            workerToTransition.targetY = REST_CENTER_Y + (Math.random() * 20 - 10);
+        }
     }
     
-    // Sinkronisasi visual worker setelah alokasi berubah
     syncVisualWorkers();
     updateUI();
 }
@@ -500,9 +661,12 @@ function handleWanderer(action) {
             gameState.population++;
             gameState.freeWorkers++;
             gameState.maxWorkers++;
+            
+            syncVisualWorkers(); 
+            
             gameLog(`👏 Anda menerima Pengembara! Populasi bertambah menjadi ${gameState.population}. Makanan berkurang: ${foodCost}.`);
         } else {
-            gameLog(`Makanan tidak cukup (${foodCost}🥩)! Pengembara masih menunggu, tapi akan pergi pada jam 15:00.`, true);
+            gameLog(`Makanan tidak cukup (${foodCost}🥩)! Pengembara masih menunggu, tapi akan pergi pada jam 17:00.`, true);
             return; 
         }
     } else if (action === 'reject') {
@@ -513,18 +677,19 @@ function handleWanderer(action) {
     updateUI();
 }
 
-/* -------------- E. UPDATE UI & CANVAS (LOGIKA PERGERAKAN DIPERBARUI) -------------- */
+/* -------------- F. UPDATE UI & CANVAS -------------- */
 function updateUI() {
     const currentHour = gameState.time.hour.toString().padStart(2, '0');
     const timeStatus = gameState.time.isNight ? '🔴 Malam' : '☀️ Siang';
     timeDisplay.textContent = `${timeStatus} | Hari ${gameState.time.dayCount} (${currentHour}:00)`;
     
+    // Update Stat Overlay
     document.getElementById('wood-stat').textContent = `${gameState.resources.wood} / ${gameState.storage.woodMax}`;
     document.getElementById('food-stat').textContent = `${gameState.resources.food} / ${gameState.storage.foodMax}`;
     document.getElementById('population-stat').textContent = gameState.population;
     
+    // Update Worker Panel
     document.getElementById('free-workers-stat-short').textContent = gameState.freeWorkers;
-    
     document.getElementById('gatherer-stat-short').textContent = gameState.workers.gatherer;
     document.getElementById('guard-stat-short').textContent = gameState.workers.guard;
     document.getElementById('hunter-stat-short').textContent = gameState.workers.hunter;
@@ -532,6 +697,7 @@ function updateUI() {
     const maxHunters = gameState.buildings.hunterHut.count * gameState.buildings.hunterHut.maxWorkers;
     document.getElementById('max-hunter-stat-short').textContent = maxHunters;
 
+    // Update Building Buttons 
     const hunterHutCost = gameState.buildings.hunterHut.cost.wood;
     document.getElementById('build-hunterhut-btn').disabled = gameState.resources.wood < hunterHutCost;
     document.getElementById('hunterhut-count').textContent = gameState.buildings.hunterHut.count;
@@ -540,6 +706,7 @@ function updateUI() {
     document.getElementById('build-storagehut-btn').disabled = gameState.resources.wood < storageHutCost;
     document.getElementById('storagehut-count').textContent = gameState.buildings.storageHut.count;
 
+    // Update Wanderer Panel
     const wandererPanel = document.getElementById('wanderer-panel');
     const wandererCostDisplay = document.getElementById('wanderer-cost');
     const wandererAcceptBtn = document.getElementById('wanderer-accept-btn');
@@ -553,7 +720,6 @@ function updateUI() {
     }
 }
 
-/* -------------- F. FUNGSI GAMBAR CANVAS -------------- */
 
 function drawBonfire(time) {
     if (!BONFIRE_POS) return; 
@@ -579,36 +745,90 @@ function drawBonfire(time) {
 
 function drawBuildings() {
     if (!BONFIRE_POS) return; 
+    
+    // Hunter Hut
     const hutCount = gameState.buildings.hunterHut.count;
+    const HUT_WIDTH = 50;
+    const HUT_HEIGHT = 30;
+    const ROOF_HEIGHT = 20;
+    
     for (let i = 0; i < hutCount; i++) {
-        const x = BONFIRE_POS.x + 80 + (i * TILE_SIZE * 1.5);
-        const y = BONFIRE_POS.y - 20;
-        ctx.fillStyle = '#cc7722';
+        const x = BONFIRE_POS.x + 80 + (i * (HUT_WIDTH + 20)); // Tambah jarak antar pondok
+        const y = BONFIRE_POS.y - 20; // Posisi dasar bangunan
+
+        // 1. Atap
+        ctx.fillStyle = '#8B4513'; // Coklat tua untuk atap
         ctx.beginPath();
-        ctx.moveTo(x, y - 20);
-        ctx.lineTo(x + TILE_SIZE / 2, y - 40);
-        ctx.lineTo(x + TILE_SIZE, y - 20);
+        // Atap dimulai dari titik y yang sama dengan bagian atas tiang/dinding
+        ctx.moveTo(x - 5, y); 
+        ctx.lineTo(x + HUT_WIDTH + 5, y); 
+        ctx.lineTo(x + HUT_WIDTH / 2, y - ROOF_HEIGHT); // Puncak atap
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = '#8b4513';
-        ctx.fillRect(x, y - 20, TILE_SIZE, 30);
+
+        // 2. Dinding Belakang (terlihat di dalam rongga)
+        ctx.fillStyle = '#654321'; // Lebih gelap dari kayu dinding
+        ctx.fillRect(x + 5, y, HUT_WIDTH - 10, HUT_HEIGHT); 
+
+        // 3. Gantungan Daging (horizontal bars)
+        ctx.strokeStyle = '#a9a9a9'; // Abu-abu metalik
+        ctx.lineWidth = 2;
+        for (let j = 0; j < 3; j++) { // 3 baris gantungan
+            const barY = y + 5 + (j * 8);
+            ctx.beginPath();
+            ctx.moveTo(x + 7, barY);
+            ctx.lineTo(x + HUT_WIDTH - 7, barY);
+            ctx.stroke();
+        }
+
+        // 4. Tiang Penyangga Depan
+        ctx.fillStyle = '#A0522D'; // Coklat kayu
+        // Tiang kiri. Dimulai dari y yang sama dengan atap dan turun.
+        ctx.fillRect(x + 2, y, 5, HUT_HEIGHT + 5); 
+        // Tiang kanan. Dimulai dari y yang sama dengan atap dan turun.
+        ctx.fillRect(x + HUT_WIDTH - 7, y, 5, HUT_HEIGHT + 5); 
     }
+    
+    // Storage Hut 
     const storageCount = gameState.buildings.storageHut.count;
+    const STORAGE_HUT_WIDTH = TILE_SIZE * 1.2; // 60
+    const STORAGE_HUT_HEIGHT = 40;
+    const STORAGE_ROOF_OVERHANG = 5; // Untuk atap yang sedikit lebih lebar
+
     for (let i = 0; i < storageCount; i++) {
-        const x = BONFIRE_POS.x - 80 - TILE_SIZE - (i * TILE_SIZE * 1.5); 
-        const y = BONFIRE_POS.y - 20;
-        ctx.fillStyle = '#78716c'; 
-        ctx.fillRect(x, y - 20, TILE_SIZE * 1.2, 40);
-        ctx.fillStyle = '#57534e';
-        ctx.fillRect(x, y - 25, TILE_SIZE * 1.2, 5);
+        const x = BONFIRE_POS.x - 80 - STORAGE_HUT_WIDTH - (i * (STORAGE_HUT_WIDTH + 20)); 
+        const y = BONFIRE_POS.y - 20; // Posisi dasar bangunan
+
+        // Dinding
+        ctx.fillStyle = '#78716c'; // Abu-abu tua
+        ctx.fillRect(x, y, STORAGE_HUT_WIDTH, STORAGE_HUT_HEIGHT);
+
+        // Atap
+        ctx.fillStyle = '#57534e'; // Abu-abu lebih gelap
+        ctx.fillRect(x - STORAGE_ROOF_OVERHANG / 2, y - 10, STORAGE_HUT_WIDTH + STORAGE_ROOF_OVERHANG, 10);
+        
+        // Pintu
+        const doorWidth = 15;
+        const doorHeight = 25;
+        const doorX = x + (STORAGE_HUT_WIDTH / 2) - (doorWidth / 2);
+        const doorY = y + STORAGE_HUT_HEIGHT - doorHeight;
+        ctx.fillStyle = '#402a1e'; // Coklat gelap untuk pintu
+        ctx.fillRect(doorX, doorY, doorWidth, doorHeight);
+
+        // Jendela
+        const windowWidth = 8;
+        const windowHeight = 8;
+        const windowX = x + 10; // Posisi di sebelah kiri
+        const windowY = y + 10; // Posisi di atas
+        ctx.fillStyle = '#2d333f'; // Sangat gelap untuk kesan kedalaman
+        ctx.fillRect(windowX, windowY, windowWidth, windowHeight);
     }
 }
 
-// --- FUNGSI BARU UNTUK SINKRONISASI VISUAL PEKERJA ---
+// --- FUNGSI SINKRONISASI VISUAL PEKERJA ---
 function syncVisualWorkers() {
     const requiredCount = gameState.population;
     
-    // 1. Sinkronisasi jumlah total pekerja
     if (visualWorkers.length !== requiredCount) {
         while (visualWorkers.length < requiredCount) {
             const randomAngle = Math.random() * Math.PI * 2;
@@ -619,7 +839,7 @@ function syncVisualWorkers() {
                 targetX: null, 
                 targetY: null,
                 isMoving: true, 
-                isTargetedMoving: false, // Tambahan properti untuk transisi cepat
+                isTargetedMoving: false, 
                 type: 'freeWorker' 
             });
         }
@@ -628,35 +848,32 @@ function syncVisualWorkers() {
         }
     }
 
-    // 2. Tentukan Tipe dan Warna
     let currentIndex = 0;
     
-    // Gatherers
-    for (let i = 0; i < gameState.workers.gatherer; i++) {
-        if (visualWorkers[currentIndex]) visualWorkers[currentIndex].type = 'gatherer';
-        currentIndex++;
-    }
-    // Hunters
-    for (let i = 0; i < gameState.workers.hunter; i++) {
-        if (visualWorkers[currentIndex]) visualWorkers[currentIndex].type = 'hunter';
-        currentIndex++;
-    }
-    // Guards
-    for (let i = 0; i < gameState.workers.guard; i++) {
-        if (visualWorkers[currentIndex]) visualWorkers[currentIndex].type = 'guard';
-        currentIndex++;
-    }
-    // Free Workers
-    for (let i = 0; i < gameState.freeWorkers; i++) {
-        if (visualWorkers[currentIndex]) visualWorkers[currentIndex].type = 'freeWorker';
-        currentIndex++;
-    }
+    const workerCounts = { 
+        gatherer: gameState.workers.gatherer, 
+        hunter: gameState.workers.hunter, 
+        guard: gameState.workers.guard, 
+        freeWorker: gameState.freeWorkers 
+    };
+    
+    ['gatherer', 'hunter', 'guard', 'freeWorker'].forEach(type => {
+        for (let i = 0; i < workerCounts[type]; i++) {
+            if (visualWorkers[currentIndex]) {
+                // Jangan ubah tipe pekerja yang sedang dalam transisi
+                if (!visualWorkers[currentIndex].isTargetedMoving) {
+                    visualWorkers[currentIndex].type = type;
+                }
+            }
+            currentIndex++;
+        }
+    });
 }
 
-// --- FUNGSI BARU UNTUK GERAK ACAK (STOCHASTIC MOVEMENT) ---
+// --- FUNGSI GERAK ACAK (STOCHASTIC MOVEMENT) ---
 function moveWorkerStochastic(worker, center, radius, minDistance) {
-    const SPEED = 0.5; // Kecepatan gerakan
-    const STOP_CHANCE = 0.003; // Peluang untuk berhenti/mulai bergerak
+    const SPEED = 0.5; 
+    const STOP_CHANCE = 0.003; 
 
     if (Math.random() < STOP_CHANCE) {
         worker.isMoving = !worker.isMoving;
@@ -672,7 +889,6 @@ function moveWorkerStochastic(worker, center, radius, minDistance) {
     const distToTarget = worker.targetX !== null ? Math.sqrt(Math.pow(worker.x - worker.targetX, 2) + Math.pow(worker.y - worker.targetY, 2)) : 0;
     
     if (worker.targetX === null || distToTarget < 2) {
-        // Hasilkan posisi target acak dalam radius
         const angle = Math.random() * Math.PI * 2;
         const dist = Math.random() * radius;
         
@@ -680,7 +896,6 @@ function moveWorkerStochastic(worker, center, radius, minDistance) {
         worker.targetY = center.y + Math.sin(angle) * dist;
     }
 
-    // Bergerak menuju target
     const dx = worker.targetX - worker.x;
     const dy = worker.targetY - worker.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -690,7 +905,6 @@ function moveWorkerStochastic(worker, center, radius, minDistance) {
         worker.y += (dy / dist) * SPEED;
     }
 
-    // Boundary Check (Hindari Pusat Api Unggun)
     const currentDistFromBonfire = Math.sqrt(Math.pow(worker.x - BONFIRE_POS.x, 2) + Math.pow(worker.y - BONFIRE_POS.y, 2));
     if (currentDistFromBonfire < minDistance) {
         const angle = Math.atan2(worker.y - BONFIRE_POS.y, worker.x - BONFIRE_POS.x);
@@ -700,21 +914,24 @@ function moveWorkerStochastic(worker, center, radius, minDistance) {
     }
 }
 
-// --- FUNGSI BARU UNTUK GERAK CEPAT MENUJU TARGET (TRANSISI) ---
+// --- FUNGSI GERAK CEPAT MENUJU TARGET (TRANSISI) ---
 function moveWorkerToTarget(worker, speed) {
+    if (worker.targetX === null || worker.targetY === null) {
+        worker.isTargetedMoving = false; 
+        return; 
+    }
+    
     const dx = worker.targetX - worker.x;
     const dy = worker.targetY - worker.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > speed) {
-        // Pindahkan
         worker.x += (dx / dist) * speed;
         worker.y += (dy / dist) * speed;
     } else {
-        // Target tercapai
         worker.x = worker.targetX;
         worker.y = worker.targetY;
-        worker.isTargetedMoving = false; // Hentikan transisi
+        worker.isTargetedMoving = false; 
         worker.targetX = null; 
         worker.targetY = null;
     }
@@ -737,7 +954,11 @@ function drawWorkers(time) {
     const WORK_SPOT = { x: 50, y: BONFIRE_POS.y };
     const GUARD_RADIUS = 50;
 
-    visualWorkers.forEach((worker, i) => {
+    // Hitung ulang index berdasarkan tipe saat ini (bukan dari visualWorkers index)
+    const currentGatherers = visualWorkers.filter(w => w.type === 'gatherer');
+    const currentHunters = visualWorkers.filter(w => w.type === 'hunter');
+
+    visualWorkers.forEach((worker) => {
         let x = worker.x;
         let y = worker.y;
         let color = WORKER_COLORS[worker.type] || '#fff'; 
@@ -745,32 +966,35 @@ function drawWorkers(time) {
         const isProductionWorker = worker.type === 'gatherer' || worker.type === 'hunter';
         
         if (worker.isTargetedMoving) {
-             // 1. Fase Lari (Hanya untuk pekerja produksi yang sedang transisi)
+            // Pekerja sedang bergerak ke target (tempat kerja/istirahat)
             moveWorkerToTarget(worker, TRANSITION_SPEED);
             x = worker.x;
             y = worker.y;
             
         } else if (worker.type === 'guard') {
-            // 2. Penjaga (Guard) - Patroli Rotasi
-            const angle = i * (Math.PI * 2 / Math.max(1, gameState.workers.guard)) + time / 300;
+            // Logika Gerak Penjaga (Rotasi) - Penjaga selalu aktif
+            const guardIndex = visualWorkers.filter(w => w.type === 'guard').indexOf(worker);
+            const angle = guardIndex * (Math.PI * 2 / Math.max(1, gameState.workers.guard)) + time / 300;
             x = BONFIRE_POS.x + Math.cos(angle) * GUARD_RADIUS;
             y = BONFIRE_POS.y + Math.sin(angle) * GUARD_RADIUS;
             worker.x = x;
             worker.y = y;
 
-        } else if ((isProductionWorker && gameState.time.isNight) || worker.type === 'freeWorker') {
-            // 3. Fase Istirahat (Gerak Acak)
+        } else if (isProductionWorker && gameState.time.isNight || worker.type === 'freeWorker') {
+            // Logika Istirahat (Malam atau Pekerja Bebas)
             moveWorkerStochastic(worker, REST_CENTER, REST_RADIUS, MIN_DISTANCE_FROM_BONFIRE);
             x = worker.x;
             y = worker.y;
             
         } else if (isProductionWorker && !gameState.time.isNight) {
-            // 4. Fase Kerja (Animasi Sine/Cosine)
+            // Logika Bekerja (Siang) - Hanya jika tidak dalam transisi
             const offset = worker.type === 'gatherer' ? 0 : 30; 
-            const xOffset = Math.sin(time / (200 + i * 50)) * 20;
-            const yOffset = Math.cos(time / (150 + i * 40)) * 10;
+            const xOffset = Math.sin(time / (200 + visualWorkers.indexOf(worker) * 50)) * 20;
+            const yOffset = Math.cos(time / (150 + visualWorkers.indexOf(worker) * 40)) * 10;
+            const index = worker.type === 'gatherer' ? currentGatherers.indexOf(worker) : currentHunters.indexOf(worker);
+            
             x = WORK_SPOT.x + xOffset;
-            y = WORK_SPOT.y + offset + (i * 15) + yOffset;
+            y = WORK_SPOT.y + offset + (index * 15) + yOffset;
             
             worker.x = x;
             worker.y = y;
@@ -799,18 +1023,29 @@ function drawVillage(time) {
     const hour = gameState.time.hour;
     let transitionFactor = 0;
     
-    if (hour >= 18 && hour < 20) {
-        transitionFactor = (hour - 18) / 2;
+    const SUNRISE_START = 4; // Fajar dimulai Jam 4
+    const SUNRISE_END = 6;   // Siang penuh Jam 6
+    const SUNSET_START = 16; // Siang berakhir Jam 16
+    const SUNSET_END = 18;   // Malam penuh Jam 18
+    const TRANSITION_DURATION = 2; // jam
+
+    // Logika Pewarnaan Kanvas (Berbasis Jam)
+    if (hour >= SUNSET_START && hour < SUNSET_END) {
+        // Senja: Siang ke Malam (16:00 - 18:00)
+        transitionFactor = (hour - SUNSET_START) / TRANSITION_DURATION;
         currentColor = interpolateColor(DAY_COLOR, NIGHT_COLOR, transitionFactor);
     } 
-    else if (hour >= 6 && hour < 8) {
-        transitionFactor = (hour - 6) / 2;
+    else if (hour >= SUNSET_END || hour < SUNRISE_START) {
+        // Malam Penuh (18:00 - 04:00)
+        currentColor = NIGHT_COLOR;
+    } 
+    else if (hour >= SUNRISE_START && hour < SUNRISE_END) {
+        // Fajar: Malam ke Siang (04:00 - 06:00)
+        transitionFactor = (hour - SUNRISE_START) / TRANSITION_DURATION;
         currentColor = interpolateColor(NIGHT_COLOR, DAY_COLOR, transitionFactor);
     }
-    else if (hour >= 20 || hour < 6) {
-        currentColor = NIGHT_COLOR;
-    }
     else {
+        // Siang Penuh (06:00 - 16:00)
         currentColor = DAY_COLOR;
     }
 
@@ -840,18 +1075,17 @@ function init() {
     }
     
     if (!gameState.isGameOver) {
+        // Kecepatan Waktu: 5000ms (5 detik per jam)
         timeIntervalId = setInterval(updateTime, 5000); 
         cityIntervalId = setInterval(updateCity, 5000); 
     }
     
     updateUI(); 
-    syncVisualWorkers(); // Pastikan visualWorkers terinisialisasi
+    syncVisualWorkers(); 
 }
 
 document.addEventListener('DOMContentLoaded', init);
 
     </script>
 </body>
-
 </html>
-
